@@ -4,8 +4,8 @@ on:
   push:
     branches:
       - dev
-      - prod
       - qa
+      - prod
 
 permissions:
   id-token: write
@@ -22,8 +22,11 @@ jobs:
       - name: Configure AWS credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::699003538476:oidc-provider/token.actions.githubusercontent.com
+          role-to-assume: arn:aws:iam::699003538476:role/GitHubOIDCRole
           aws-region: ap-south-1
+
+      - name: Show caller identity
+        run: aws sts get-caller-identity
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -34,5 +37,6 @@ jobs:
       - name: Terraform Plan
         run: terraform plan
 
-      - name: Terraform Apply
+      - name: Terraform Apply (only in prod)
+        if: github.ref == 'refs/heads/prod'
         run: terraform apply -auto-approve
